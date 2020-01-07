@@ -379,7 +379,7 @@ public class ApplicationBootloader {
 
     private static void loadExtProperties (IConfiguration conf, String name) {
         String ext_dir = conf.getString ("ext.conf.dir");
-        Path path = Paths.get (ext_dir, name);
+        Path path = Paths.get (ext_dir, name + ".conf");
         if (Files.exists (path)) {
             try (InputStream in = Files.newInputStream (path, StandardOpenOption.READ)) {
                 Properties props = new Properties ();
