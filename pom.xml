@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.dreamwork</groupId>
-    <artifactId>application-bootloader</artifactId>
+    <artifactId>dreamwork-application-bootloader</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.dreamwork</groupId>
             <artifactId>dreamwork-base</artifactId>
-            <version>3.0.3</version>
+            <version>3.0.4</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
