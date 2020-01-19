@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
@@ -102,14 +103,14 @@ public class ApplicationBootloader {
         }
     }
 
-    public static void run (Class<?> type, String[] args) {
+    public static void run (Class<?> type, String[] args) throws InvocationTargetException {
         ClassLoader loader = ApplicationBootloader.class.getClassLoader ();
 
         Map<String, Argument> map = new HashMap<> ();
         Gson g = new Gson ();
 
         load (loader, g, map, "application-bootloader.json");
-        IBootable ib = null;
+        IBootable ib;
         if (type != null) {
             if (type.isAnnotationPresent (IBootable.class)) {
                 ib = type.getAnnotation (IBootable.class);
@@ -183,18 +184,26 @@ public class ApplicationBootloader {
                 try {
                     method = type.getMethod ("start", IConfiguration.class);
 
-                    if (method != null) try {
-                        if (method.getModifiers () == Modifier.STATIC) {
-                            method.invoke (null, getRootConfiguration ());
-                        } else {
-                            Object o = type.newInstance ();
-                            method.invoke (o, getRootConfiguration ());
+                    if (method != null) {
+                        try {
+                            if (method.getModifiers () == Modifier.STATIC) {
+                                method.invoke (null, getRootConfiguration ());
+                            } else {
+                                Object o = type.newInstance ();
+                                method.invoke (o, getRootConfiguration ());
+                            }
+                        } catch (Exception ex) {
+                            logger.warn (ex.getMessage (), ex);
+                            throw new InvocationTargetException (ex);
                         }
-                    } catch (Exception ex) {
-                        ex.printStackTrace ();
+
+                        return;
                     }
                 } catch (NoSuchMethodException ex) {
-                    ex.printStackTrace ();
+//                    logger.warn (ex.getMessage (), ex);
+                    if (logger.isTraceEnabled ()) {
+                        logger.trace ("{} has no method named [start] take one argument::{}", type, IConfiguration.class);
+                    }
                 }
             }
 
@@ -203,35 +212,49 @@ public class ApplicationBootloader {
                     method = type.getMethod ("start", String[].class);
                     has_args = true;
                 } catch (NoSuchMethodException ex) {
-                    ex.printStackTrace ();
+//                    ex.printStackTrace ();
+                    if (logger.isTraceEnabled ()) {
+                        logger.trace ("{} has no method named [start] take parameters::String[]", type);
+                    }
                 }
             }
+
             if (method == null) {
                 try {
                     method = type.getMethod ("start");
                 } catch (NoSuchMethodException ex) {
-                    ex.printStackTrace ();
+//                    ex.printStackTrace ();
+                    if (logger.isTraceEnabled ()) {
+                        logger.trace ("{} has no method named [start] without parameter", type);
+                    }
                 }
             }
 
-            if (method != null) try {
-                if (method.getModifiers () == Modifier.STATIC) {
-                    if (has_args) {
-                        method.invoke (null, new Object[] {args});
+            if (method != null) {
+                try {
+                    if (method.getModifiers () == Modifier.STATIC) {
+                        if (has_args) {
+                            method.invoke (null, new Object[] {args});
+                        } else {
+                            method.invoke (null);
+                        }
                     } else {
-                        method.invoke (null);
+                        Object o = type.newInstance ();
+                        if (has_args) {
+                            method.invoke (o, new Object[] {args});
+                        } else {
+                            method.invoke (o);
+                        }
                     }
-                } else {
-                    Object o = type.newInstance ();
-                    if (has_args) {
-                        method.invoke (o, new Object[] {args});
-                    } else {
-                        method.invoke (o);
-                    }
+                } catch (Exception ex) {
+                    throw new RuntimeException (ex);
                 }
-            } catch (Exception ex) {
-                throw new RuntimeException (ex);
+            } else {
+                logger.error ("Can't find application entrance within type {}", type);
             }
+        } else {
+            logger.error ("Can't find entrance type!!");
+            throw new IllegalArgumentException ("Can't find entrance type!!");
         }
     }
 
@@ -391,7 +414,7 @@ public class ApplicationBootloader {
         }
     }
 
-    public static void main (String[] args) {
+    public static void main (String[] args) throws InvocationTargetException {
         run (null, args);
 /*
         final Map<String, Lock> locks = new HashMap<> ();
