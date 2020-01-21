@@ -52,11 +52,16 @@ public class ApplicationBootloader {
             }
         }
 
-        String label = Thread.currentThread ().getName ();
+        Logger logger = LoggerFactory.getLogger (ApplicationBootloader.class);
         do {
-            System.out.printf ("[%s] acquiring a lock associated to %s%n", label, name);
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("acquiring a lock associated to {}", name);
+            }
+
             if (locker.tryLock ()) break;
-            System.out.printf ("[%s] the locker is locked, wait for a moment%n", label);
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("the locker is locked, wait for a moment");
+            }
             Object o;
             synchronized (waiters) {
                 List<Object> list = waiters.computeIfAbsent (name, key -> new ArrayList<> ());
@@ -73,7 +78,9 @@ public class ApplicationBootloader {
 
         try {
             // now, we got a active lock
-            System.out.printf ("[%s] wo got a valid lock%n", label);
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("wo got a valid lock");
+            }
             synchronized (context) {
                 // check the cache again, 'cause while we are waiting for the lock,
                 // another thread might have loaded the configuration and stored it in the cache.
@@ -87,7 +94,9 @@ public class ApplicationBootloader {
         } finally {
             // release the lock
             locker.unlock ();
-            System.out.printf ("[%s] release the lock!%n", label);
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("release the lock!");
+            }
             // release the waiting locker
             Object o = null;
             synchronized (waiters) {
@@ -348,7 +357,8 @@ public class ApplicationBootloader {
                         key = item.longOption;
                     }
                     if (!StringUtil.isEmpty (key)) {
-                        map.putIfAbsent (key, item);
+                        map.put (key, item);
+//                        map.putIfAbsent (key, item);
                     }
                 });
             }
