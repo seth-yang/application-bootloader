@@ -348,7 +348,7 @@ public class ApplicationBootloader {
                         key = item.longOption;
                     }
                     if (!StringUtil.isEmpty (key)) {
-                        map.putIfAbsent (key, item);
+                        map.put (key, item);
                     }
                 });
             }
