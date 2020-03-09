@@ -166,8 +166,9 @@ public class ApplicationBootloader {
             for (String key : sys.stringPropertyNames ()) {
                 configuration.setRawProperty (key, sys.getProperty (key));
             }
-            context.putIfAbsent ("root", configuration);
+
 */
+            context.putIfAbsent ("root", configuration);
         } catch (Exception ex) {
             logger.warn (ex.getMessage (), ex);
             throw new RuntimeException (ex);
