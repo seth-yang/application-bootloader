@@ -159,7 +159,15 @@ public class ApplicationBootloader {
                         setDefaultValue (parser, configuration, a.propKey, a.longOption);
                 }
             }
+
+/*
+            // 所有配置文件解析完成，合并 System.getProperties 的属性
+            Properties sys = System.getProperties ();
+            for (String key : sys.stringPropertyNames ()) {
+                configuration.setRawProperty (key, sys.getProperty (key));
+            }
             context.putIfAbsent ("root", configuration);
+*/
         } catch (Exception ex) {
             logger.warn (ex.getMessage (), ex);
             throw new RuntimeException (ex);
