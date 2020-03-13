@@ -287,6 +287,10 @@ public class ApplicationBootloader {
             throw new IOException ("Can't create dir: " + parent.getCanonicalPath ());
         }
 
+        if ("TRACE".equalsIgnoreCase (logLevel)) {
+            System.out.printf ("## log file: %s ##%n", file.getCanonicalFile ());
+        }
+
         try (InputStream in = loader.getResourceAsStream ("internal-log4j.properties")) {
             Properties props = new Properties ();
             props.load (in);
@@ -357,7 +361,7 @@ public class ApplicationBootloader {
                         key = item.longOption;
                     }
                     if (!StringUtil.isEmpty (key)) {
-                        map.putIfAbsent (key, item);
+                        map.put (key, item);
                     }
                 });
             }
