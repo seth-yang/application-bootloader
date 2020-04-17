@@ -307,6 +307,19 @@ public class ApplicationBootloader {
                 props.setProperty ("log4j.appender.FILE.Threshold", logLevel);
             }
 
+            if (parser.isArgPresent ("trace-prefix")) {
+                String prefixes = parser.getValue ("trace-prefix");
+                if (!StringUtil.isEmpty (prefixes)) {
+                    String[] parts = prefixes.trim ().split (File.pathSeparator);
+                    for (String prefix : parts) {
+                        if ("trace".equalsIgnoreCase (logLevel)) {
+                            System.out.printf ("#### setting %s log level to trace ####%n", prefix);
+                        }
+                        props.setProperty ("log4j.logger." + prefix, "trace");
+                    }
+                }
+            }
+
             PropertyConfigurator.configure (props);
         }
     }
