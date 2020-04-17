@@ -1,46 +1,69 @@
 [
-  {
-    "shortOption": "c",
-    "longOption": "config",
-    "description": "path to config",
-    "requireValue": true,
-    "defaultValue": "../conf/application-bootloader.conf"
-  },
-  {
-    "shortOption": "e",
-    "longOption": "conf-extra-dir",
-    "description": "path to extra config files",
-    "requireValue": true,
-    "defaultValue": "../conf.d"
-  },
-  {
-    "shortOption": "X",
-    "longOption": "jmx-enabled",
-    "description": "enable jmx feature or not"
-  },
-  {
-    "shortOption":"v",
-    "longOption":"verbose",
-    "description":"enter verbose mode"
-  },
-  {
-    "longOption":"log-file",
-    "description":"the log file",
-    "requireValue":true,
-    "defaultValue":"../logs/integration.log"
-  },
-  {
-    "longOption":"log-level",
-    "description":"the log level",
-    "requireValue":true,
-    "defaultValue":"INFO",
-    "values":[
-      {"value":"TRACE","desc":"trace, same to option -v"},
-      {"value":"DEBUG","desc":"debug"},
-      {"value":"INFO", "desc":"info"},
-      {"value":"WARN", "desc":"warn"},
-      {"value":"ERROR","desc":"error"},
-      {"value":"FATAL","desc":"fatal"}
-    ]
-  }
+    {
+        "shortOption": "c",
+        "longOption": "config",
+        "description": "path to config",
+        "requireValue": true,
+        "defaultValue": "../conf/application-bootloader.conf"
+    },
+    {
+        "shortOption": "e",
+        "longOption": "conf-extra-dir",
+        "description": "path to extra config files",
+        "requireValue": true,
+        "defaultValue": "../conf.d"
+    },
+    {
+        "shortOption": "X",
+        "longOption": "jmx-enabled",
+        "description": "enable jmx feature or not"
+    },
+    {
+        "shortOption": "v",
+        "longOption": "verbose",
+        "description": "enter verbose mode"
+    },
+    {
+        "longOption": "log-file",
+        "description": "the log file",
+        "requireValue": true,
+        "defaultValue": "../logs/integration.log"
+    },
+    {
+        "longOption": "log-level",
+        "description": "the log level",
+        "requireValue": true,
+        "defaultValue": "INFO",
+        "values": [
+            {
+                "value": "TRACE",
+                "desc": "trace, same to option -v"
+            },
+            {
+                "value": "DEBUG",
+                "desc": "debug"
+            },
+            {
+                "value": "INFO",
+                "desc": "info"
+            },
+            {
+                "value": "WARN",
+                "desc": "warn"
+            },
+            {
+                "value": "ERROR",
+                "desc": "error"
+            },
+            {
+                "value": "FATAL",
+                "desc": "fatal"
+            }
+        ]
+    },
+    {
+        "longOption": "trace-prefix",
+        "description": "trace prefix",
+        "requireValue": true
+    }
 ]
