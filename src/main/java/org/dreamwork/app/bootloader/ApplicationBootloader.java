@@ -31,6 +31,16 @@ public class ApplicationBootloader {
     private static final Map<String, Lock> locks = new HashMap<> ();
     private static final Map<String, List<Object>> waiters = new HashMap<> ();
 
+    private static ArgumentParser parser = null;
+
+    public static boolean isArgPresent (String option) {
+        return parser.isArgPresent (option);
+    }
+
+    public static boolean isArgPresent (char option) {
+        return parser.isArgPresent (option);
+    }
+
     public static IConfiguration getRootConfiguration () {
         return context.get ("root");
     }
@@ -123,7 +133,6 @@ public class ApplicationBootloader {
             }
         }
 
-        ArgumentParser parser = null;
         if (!map.isEmpty ()) {
             parser = new ArgumentParser (new ArrayList<> (map.values ()));
         }
@@ -135,6 +144,12 @@ public class ApplicationBootloader {
         }
 
         parser.parse (args);
+
+        if (parser.isArgPresent ('h')) {
+            parser.showHelp ();
+            System.exit (0);
+        }
+
         try {
             initLogger (loader, parser);
         } catch (IOException ex) {
