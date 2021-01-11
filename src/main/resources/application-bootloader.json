@@ -4,7 +4,7 @@
         "longOption": "config",
         "description": "path to config",
         "requireValue": true,
-        "defaultValue": "../conf/application-bootloader.conf"
+        "defaultValue": "../conf/application.conf"
     },
     {
         "shortOption": "e",
@@ -27,7 +27,7 @@
         "longOption": "log-file",
         "description": "the log file",
         "requireValue": true,
-        "defaultValue": "../logs/integration.log"
+        "defaultValue": "../logs/application.log"
     },
     {
         "longOption": "log-level",
