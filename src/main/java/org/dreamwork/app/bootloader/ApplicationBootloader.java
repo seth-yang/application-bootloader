@@ -23,7 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-@SuppressWarnings ("unused")
+@SuppressWarnings ("all")
 public class ApplicationBootloader {
     private static final Map<String, IConfiguration> context = new HashMap<> ();
     private static final Map<String, Lock> locks = new HashMap<> ();
@@ -111,7 +111,7 @@ public class ApplicationBootloader {
         }
     }
 
-    public static void run (Class<?> type, String[] args) throws InvocationTargetException {
+    public static void run (Class<?> type, String... args) throws InvocationTargetException {
         ClassLoader loader = ApplicationBootloader.class.getClassLoader ();
 
         Map<String, Argument> map = new HashMap<> ();
@@ -329,6 +329,7 @@ public class ApplicationBootloader {
 
         String level = mapping.get (logLevel.toLowerCase ());
         String filePattern = FileInfo.getFileNameWithoutExtension (logFile);
+        String path = FileInfo.getFolder (logFile);
 
         Properties props = new Properties ();
         try (InputStream in = loader.getResourceAsStream ("internal-jdk-logging.properties")) {
@@ -340,8 +341,11 @@ public class ApplicationBootloader {
             System.out.printf ("### setting log level to %s ###%n", logLevel);
         }
 
-        props.setProperty ("java.util.logging.FileHandler.pattern", filePattern + "%u.log");
+        props.setProperty ("java.util.logging.FileHandler.pattern", path + '/' + filePattern + "%u.log");
         if ("trace".equalsIgnoreCase (logLevel)) {
+
+            System.out.printf ("### log file -> %s ###%n", new File (path + '/' + filePattern + "%u.log").getCanonicalPath ());
+
             props.setProperty ("java.util.logging.FileHandler.level", "FINEST");
             props.setProperty ("java.util.logging.ConsoleHandler.level", "FINEST");
             props.setProperty (".level", "FINEST");
