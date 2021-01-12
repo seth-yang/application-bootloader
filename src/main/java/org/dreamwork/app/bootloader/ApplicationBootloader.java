@@ -1,20 +1,17 @@
 package org.dreamwork.app.bootloader;
 
 import com.google.gson.Gson;
-import org.apache.log4j.PropertyConfigurator;
 import org.dreamwork.cli.Argument;
 import org.dreamwork.cli.ArgumentParser;
 import org.dreamwork.config.IConfiguration;
 import org.dreamwork.config.PropertyConfiguration;
+import org.dreamwork.util.FileInfo;
 import org.dreamwork.util.IOUtil;
 import org.dreamwork.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -26,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+@SuppressWarnings ("unused")
 public class ApplicationBootloader {
     private static final Map<String, IConfiguration> context = new HashMap<> ();
     private static final Map<String, Lock> locks = new HashMap<> ();
@@ -306,6 +304,68 @@ public class ApplicationBootloader {
             System.out.printf ("## log file: %s ##%n", file.getCanonicalFile ());
         }
 
+        String className = "org.apache.log4j.PropertyConfigurator";
+        boolean log4j = false;
+        try {
+            Class.forName (className);
+            log4j = true;
+        } catch (ClassNotFoundException ex) {
+            // log4j not exists.
+        }
+
+        if (log4j)
+            initLog4J (loader, logLevel, logFile);
+        else
+            initJdkLogger (loader, logLevel, logFile);
+    }
+
+    private static void initJdkLogger (ClassLoader loader, String logLevel, String logFile) throws IOException {
+        Map<String, String> mapping = new HashMap<> ();
+        mapping.put ("trace", "FINEST");
+        mapping.put ("debug", "FINER");
+        mapping.put ("info", "INFO");
+        mapping.put ("warn", "WARNING");
+        mapping.put ("error", "SEVERE");
+
+        String level = mapping.get (logLevel.toLowerCase ());
+        String filePattern = FileInfo.getFileNameWithoutExtension (logFile);
+
+        Properties props = new Properties ();
+        try (InputStream in = loader.getResourceAsStream ("internal-jdk-logging.properties")) {
+            props.load (in);
+        }
+
+        boolean trace = "trace".equalsIgnoreCase (logLevel);
+        if (trace) {
+            System.out.printf ("### setting log level to %s ###%n", logLevel);
+        }
+
+        props.setProperty ("java.util.logging.FileHandler.pattern", filePattern + "%u.log");
+        if ("trace".equalsIgnoreCase (logLevel)) {
+            props.setProperty ("java.util.logging.FileHandler.level", "FINEST");
+            props.setProperty ("java.util.logging.ConsoleHandler.level", "FINEST");
+            props.setProperty (".level", "FINEST");
+        } else {
+            props.setProperty ("java.util.logging.FileHandler.level", level);
+            props.setProperty ("java.util.logging.ConsoleHandler.level", level);
+            props.setProperty (".level", level);
+        }
+
+        String tmpDir = System.getProperty ("java.io.tmpdir");
+        String uuid   = StringUtil.uuid ();
+        File file = new File (tmpDir, "jdk-logging-" + uuid + ".properties");
+        try (OutputStream out = new FileOutputStream (file)) {
+            OutputStreamWriter writer = new OutputStreamWriter (out, StandardCharsets.UTF_8);
+            props.store (writer, uuid);
+            out.flush ();
+        }
+        System.setProperty ("java.util.logging.config.file", file.getCanonicalPath ());
+        Logger logger = LoggerFactory.getLogger (ApplicationBootloader.class);
+        logger.info ("JDK Logging load complete");
+        file.deleteOnExit ();
+    }
+
+    private static void initLog4J (ClassLoader loader, String logLevel, String logFile) throws IOException {
         try (InputStream in = loader.getResourceAsStream ("internal-log4j.properties")) {
             Properties props = new Properties ();
             props.load (in);
@@ -335,7 +395,20 @@ public class ApplicationBootloader {
                 }
             }
 
-            PropertyConfigurator.configure (props);
+            if ("trace".equalsIgnoreCase (logLevel)) {
+                System.out.println ("trying to configure log4j ...");
+            }
+            try {
+                Class<?> type = Class.forName ("org.apache.log4j.PropertyConfigurator");
+                Method m = type.getMethod ("configure", Properties.class);
+                m.invoke (null, props);
+
+                Logger logger = LoggerFactory.getLogger (ApplicationBootloader.class);
+                logger.info ("Log4J load complete");
+            } catch (Exception ex) {
+                System.err.println ("can't configure log4j");
+                ex.printStackTrace ();
+            }
         }
     }
 
@@ -453,32 +526,6 @@ public class ApplicationBootloader {
                 ex.printStackTrace ();
             }
         }
-    }
-
-    public static void main (String[] args) throws InvocationTargetException {
-        run (null, args);
-/*
-        final Map<String, Lock> locks = new HashMap<> ();
-        final Map<String, List<Worker>> waiters = new HashMap<> ();
-        final CountDownLatch latch = new CountDownLatch (10);
-        ExecutorService executor = Executors.newCachedThreadPool ();
-
-        for (int i = 0; i < 10; i ++) {
-            int index = (int) (Math.random () * 3) + 1;
-            final String name = "thread-" + index;
-            Worker worker = new Worker (locks, waiters, name, i);
-            worker.latch  = latch;
-            executor.execute (worker);
-        }
-        executor.shutdown ();
-        try {
-            latch.await ();
-        } catch (InterruptedException e) {
-            e.printStackTrace ();
-        }
-        System.out.println (locks);
-        System.out.println (waiters);
-*/
     }
 
     private static final class Worker implements Runnable {
