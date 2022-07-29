@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 @SuppressWarnings ("all")
 public class ApplicationBootloader {
@@ -30,6 +31,11 @@ public class ApplicationBootloader {
     private static final Map<String, List<Object>> waiters = new HashMap<> ();
 
     private static ArgumentParser parser = null;
+
+    private static Logger logger;
+
+    private static Class<?> type;
+    private static Object[] args;
 
     public static boolean isArgPresent (String option) {
         return parser.isArgPresent (option);
@@ -111,7 +117,9 @@ public class ApplicationBootloader {
         }
     }
 
-    public static void run (Class<?> type, String... args) throws InvocationTargetException {
+    public static IConfiguration load (Class<?> type, String... args) {
+        ApplicationBootloader.type = type;
+        ApplicationBootloader.args = args;
         ClassLoader loader = ApplicationBootloader.class.getClassLoader ();
 
         Map<String, Argument> map = new HashMap<> ();
@@ -138,7 +146,7 @@ public class ApplicationBootloader {
         if (parser == null) {
             System.err.println ("can't initial command line parser");
             System.exit (-1);
-            return;
+            return null;
         }
 
         parser.parse (args);
@@ -191,6 +199,52 @@ public class ApplicationBootloader {
             logger.trace ("configurations load complete, trying to start application");
         }
 
+        List<Argument> arguments = parser.getAllArguments ().stream()
+                .filter (a -> a.required)
+                .collect(Collectors.toList());
+        PropertyConfiguration conf = (PropertyConfiguration) getRootConfiguration ();
+        for (Argument a : arguments) {
+            boolean found = false;
+            String message = "the mandatory option: ";
+            if (!StringUtil.isEmpty (a.propKey)) {
+                if (!conf.contains (a.propKey)) {
+                    if (!StringUtil.isEmpty (a.longOption)) {
+                        message += "--" + a.longOption;
+                        found = true;
+                    } else if (!StringUtil.isEmpty (a.shortOption)) {
+                        message += "-" + a.shortOption;
+                        found = true;
+                    }
+                }
+            } else {
+                if (!StringUtil.isEmpty (a.longOption)) {
+                    if (!parser.isArgPresent (a.longOption)) {
+                        message += "--" + a.longOption;
+                        found = true;
+                    }
+                } else if (!StringUtil.isEmpty (a.shortOption)) {
+                    if (!parser.isArgPresent (a.shortOption)) {
+                        message += "-" + a.shortOption;
+                        found = true;
+                    }
+                }
+            }
+            if (found) {
+                message += " is not provided";
+                System.err.println (message);
+                parser.showHelp ();
+            }
+        }
+
+        return getRootConfiguration ();
+    }
+
+    public static void run (Class<?> type, String... args) throws InvocationTargetException {
+        load (type, args);
+        run ();
+    }
+
+    public static void run () throws InvocationTargetException {
         if (null != type) {
             Method[] methods = type.getMethods ();
             Method method = null;
