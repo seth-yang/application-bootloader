@@ -240,6 +240,12 @@ public class ApplicationBootloader {
         return getRootConfiguration ();
     }
 
+    public static void showHelpe () {
+        if (parser != null) {
+            parser.showHelp ();
+        }
+    }
+
     public static void run (Class<?> type, String... args) throws InvocationTargetException {
         load (type, args);
         run ();
