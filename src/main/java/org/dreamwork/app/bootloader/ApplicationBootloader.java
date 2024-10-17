@@ -422,7 +422,7 @@ public class ApplicationBootloader {
         }
         System.setProperty ("java.util.logging.config.file", file.getCanonicalPath ());
         Logger logger = LoggerFactory.getLogger (ApplicationBootloader.class);
-        logger.info ("JDK Logging load complete");
+        logger.trace ("JDK Logging load complete");
         file.deleteOnExit ();
     }
 
@@ -430,8 +430,9 @@ public class ApplicationBootloader {
         try (InputStream in = loader.getResourceAsStream ("internal-log4j.properties")) {
             Properties props = new Properties ();
             props.load (in);
-
-            System.out.println ("### setting log level to " + logLevel + " ###");
+            if ("trace".equalsIgnoreCase (logLevel)) {
+                System.out.println ("### setting log level to " + logLevel + " ###");
+            }
             if ("trace".equalsIgnoreCase (logLevel)) {
                 props.setProperty ("log4j.rootLogger", "INFO, stdout, FILE");
                 props.setProperty ("log4j.appender.FILE.File", logFile);
@@ -465,7 +466,7 @@ public class ApplicationBootloader {
                 m.invoke (null, props);
 
                 Logger logger = LoggerFactory.getLogger (ApplicationBootloader.class);
-                logger.info ("Log4J load complete");
+                logger.trace ("Log4J load complete");
             } catch (Exception ex) {
                 System.err.println ("can't configure log4j");
                 ex.printStackTrace ();
@@ -498,8 +499,10 @@ public class ApplicationBootloader {
 
         Properties props = new Properties ();
         if (!file.exists ()) {
-            logger.warn ("can't find config file: {}", config_file);
-            logger.warn ("using default config.");
+            if (logger.isTraceEnabled ()) {
+                logger.warn ("can't find config file: {}", config_file);
+                logger.warn ("using default config.");
+            }
         } else {
             try (InputStream in = new FileInputStream (file)) {
                 props.load (in);
