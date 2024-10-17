@@ -3,6 +3,7 @@ package org.dreamwork.app.bootloader;
 import com.google.gson.Gson;
 import org.dreamwork.cli.Argument;
 import org.dreamwork.cli.ArgumentParser;
+import org.dreamwork.config.EnhancedConfiguration;
 import org.dreamwork.config.IConfiguration;
 import org.dreamwork.config.PropertyConfiguration;
 import org.dreamwork.util.FileInfo;
@@ -165,7 +166,7 @@ public class ApplicationBootloader {
         Logger logger = LoggerFactory.getLogger (ApplicationBootloader.class);
         try {
             Properties props = parseConfig (parser, logger);
-            PropertyConfiguration configuration = new PropertyConfiguration (props);
+            EnhancedConfiguration configuration = new EnhancedConfiguration (props);
             // patch extra config dir
             setDefaultValue (parser, configuration, "ext.conf.dir", 'e');
             // patch jmx enable settings
