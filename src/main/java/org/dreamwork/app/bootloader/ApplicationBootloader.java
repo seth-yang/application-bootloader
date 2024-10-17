@@ -309,6 +309,8 @@ public class ApplicationBootloader {
 
             if (method != null) {
                 try {
+                    int count = method.getParameterCount ();
+                    has_args = count > 0;
                     if (method.getModifiers () == Modifier.STATIC) {
                         if (has_args) {
                             method.invoke (null, new Object[] {args});
